@@ -7,73 +7,140 @@ on:
   push:
     tags:
       - "v*"
+env:
+  REGISTRY_IMAGE: teslamatefork/teslamatefork
+  DOCKER_USERNAME: teslamatefork
+  GHCR_USERNAME: jakoblichterfeld
 
 jobs:
-  tesmalate_build_and_publish:
+  teslamate_build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "linux/amd64"
+            runs_on: "ubuntu-latest"
+            cache_id: amd64
+          - platform: "linux/arm/v7"
+            runs_on: "buildjet-2vcpu-ubuntu-2204-arm"
+            cache_id: arm
+          - platform: "linux/arm64"
+            runs_on: "buildjet-2vcpu-ubuntu-2204-arm"
+            cache_id: arm64
+
+    runs-on: ${{ matrix.runs_on }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ env.DOCKER_USERNAME  }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ env.GHCR_USERNAME }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          cache-from: type=registry,ref=ghcr.io/${{ env.GHCR_USERNAME }}/teslamatefork:buildcache-${{ matrix.cache_id }}
+          cache-to: type=registry,ref=ghcr.io/${{ env.GHCR_USERNAME }}/teslamatefork:buildcache-${{ matrix.cache_id }},mode=max
+          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+      - name: Upload digest
+        uses: actions/upload-artifact@v3
+        with:
+          name: digests
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  teslamate_merge:
+    runs-on: ubuntu-latest
+    needs:
+      - teslamate_build
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v3
+        with:
+          name: digests
+          path: /tmp/digests
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            type=schedule,pattern=edge
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=edge
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: teslamate
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
+
+  grafana:
     runs-on: ubuntu-latest
     steps:
-      - name: Prepare
-        id: prepare
-        run: |
-          DOCKER_USERNAME=teslamatefork
-          DOCKER_IMAGE=teslamatefork/teslamatefork
-          DOCKER_PLATFORMS=linux/amd64,linux/arm/v7,linux/arm64
-          VERSION=edge
-
-          if [[ $GITHUB_REF == refs/tags/v* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-            MINOR_VERSION=${VERSION%.*}
-          fi
-
-          TAGS="--tag ${DOCKER_IMAGE}:${VERSION}"
-          if [ "$VERSION" != "edge" ]; then
-            TAGS="$TAGS --tag ${DOCKER_IMAGE}:${MINOR_VERSION} --tag ${DOCKER_IMAGE}:latest"
-          fi
-
-          echo ::set-output name=docker_username::${DOCKER_USERNAME}
-          echo ::set-output name=docker_image::${DOCKER_IMAGE}
-          echo ::set-output name=version::${VERSION}
-          echo ::set-output name=buildx_args::--platform ${DOCKER_PLATFORMS} \
-            ${TAGS} --file Dockerfile .
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
+      - name: Docker meta
+        id: docker_meta
+        uses: docker/metadata-action@v4.4.0
+        with:
+          images: teslamate/grafana
+          tags: |
+            type=edge
+            type=schedule,pattern=edge
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Available platforms
-        run: echo ${{ steps.buildx.outputs.platforms }}
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        id: cache
+        uses: docker/setup-buildx-action@v2.2.1
+      - name: Login to DockerHub
+        uses: docker/login-action@v2.0.0
         with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-teslamatetelegrambot-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-teslamatetelegrambot-
-      - name: Docker Buildx (build)
-        run: |
-          docker buildx build \
-            --cache-from "type=local,src=/tmp/.buildx-cache" \
-            --cache-to "type=local,dest=/tmp/.buildx-cache,mode=max" \
-            --output "type=image,push=false" \
-            ${{ steps.prepare.outputs.buildx_args }}
-      - name: Docker Login
-        if: success() && github.event_name != 'pull_request' && (endsWith(github.ref, github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/'))
-        uses: docker/login-action@v3
-        with:
-          username: ${{ steps.prepare.outputs.docker_username }}
+          username: teslamate
           password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Docker Buildx (push)
-        if: success() && github.event_name != 'pull_request' && (endsWith(github.ref, github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/'))
-        run: |
-          docker buildx build \
-            --cache-from "type=local,src=/tmp/.buildx-cache" \
-            --output "type=image,push=true" \
-            ${{ steps.prepare.outputs.buildx_args }}
-      - name: Clear
-        if: always()
-        run: |
-          rm -f ${HOME}/.docker/config.json
+      - name: Build and push
+        uses: docker/build-push-action@v3.2.0
+        with:
+          context: grafana
+          push: true
+          platforms: linux/amd64,linux/arm/v7,linux/arm64
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
