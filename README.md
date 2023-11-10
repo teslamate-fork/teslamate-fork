@@ -1,11 +1,11 @@
-# TeslaMate
+# Fork of Teslamate to ensure working logging since 2023.38.1 
 
-[![CI](https://github.com/adriankumpf/teslamate/actions/workflows/elixir.yml/badge.svg)](https://github.com/adriankumpf/teslamate/actions/workflows/elixir.yml)
-[![Publish Docker images](https://github.com/adriankumpf/teslamate/actions/workflows/buildx.yml/badge.svg)](https://github.com/adriankumpf/teslamate/actions/workflows/buildx.yml)
+[![CI](https://github.com/teslamate-fork/teslamate-fork/actions/workflows/elixir.yml/badge.svg)](https://github.com/teslamate-fork/teslamate-fork/actions/workflows/elixir.yml)
+[![Publish Docker images](https://github.com/teslamate-fork/teslamate-fork/actions/workflows/buildx.yml/badge.svg)](https://github.com/teslamate-fork/teslamate-fork/actions/workflows/buildx.yml)
 [![](https://coveralls.io/repos/github/adriankumpf/teslamate/badge.svg?branch=master)](https://coveralls.io/github/adriankumpf/teslamate?branch=master)
-[![](https://img.shields.io/docker/v/teslamate/teslamate/latest)](https://hub.docker.com/r/teslamate/teslamate)
-[![](https://img.shields.io/docker/image-size/teslamate/teslamate/latest)](https://hub.docker.com/r/teslamate/teslamate)
-[![](https://img.shields.io/docker/pulls/teslamate/teslamate?color=%23099cec)](https://hub.docker.com/r/teslamate/teslamate)
+[![](https://img.shields.io/docker/v/teslamate-fork/teslamate-fork/latest)](https://hub.docker.com/r/teslamate-fork/teslamate-fork)
+[![](https://img.shields.io/docker/image-size/teslamate-fork/teslamate-fork/latest)](https://hub.docker.com/r/teslamate-fork/teslamate-fork)
+[![](https://img.shields.io/docker/pulls/teslamate-fork/teslamate-fork?color=%23099cec)](https://hub.docker.com/r/teslamate-fork/teslamate-fork)
 [![](https://img.shields.io/badge/Donate-PayPal-ff69b4.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YE4CPXRAV9CVL&source=url)
 
 A powerful, self-hosted data logger for your Tesla.
