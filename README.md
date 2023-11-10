@@ -3,8 +3,8 @@
 [![CI](https://github.com/teslamate-fork/teslamate-fork/actions/workflows/elixir.yml/badge.svg)](https://github.com/teslamate-fork/teslamate-fork/actions/workflows/elixir.yml)
 [![Publish Docker images](https://github.com/teslamate-fork/teslamate-fork/actions/workflows/buildx.yml/badge.svg)](https://github.com/teslamate-fork/teslamate-fork/actions/workflows/buildx.yml)
 [![](https://coveralls.io/repos/github/adriankumpf/teslamate/badge.svg?branch=master)](https://coveralls.io/github/adriankumpf/teslamate?branch=master)
-[![](https://img.shields.io/docker/v/teslamatefork/teslamatefork/latest)](https://hub.docker.com/r/teslamatefork/teslamatefork)
-[![](https://img.shields.io/docker/image-size/teslamatefork/teslamatefork/latest)](https://hub.docker.com/r/teslamatefork/teslamatefork)
+[![](https://img.shields.io/docker/v/teslamatefork/teslamatefork/edge)](https://hub.docker.com/r/teslamatefork/teslamatefork)
+[![](https://img.shields.io/docker/image-size/teslamatefork/teslamatefork/edge)](https://hub.docker.com/r/teslamatefork/teslamatefork)
 [![](https://img.shields.io/docker/pulls/teslamatefork/teslamatefork?color=%23099cec)](https://hub.docker.com/r/teslamatefork/teslamatefork)
 [![](https://img.shields.io/badge/Donate-PayPal-ff69b4.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YE4CPXRAV9CVL&source=url)
 
@@ -17,7 +17,7 @@ A powerful, self-hosted data logger for your Tesla.
 
 ## Installation of the fork with the fix for Tesla FW 2023.38.1
 
-in ´docker-compose.yml´ change to ´teslamatefork/teslamatefork:edge´ then run ´docker compose up -d´
+in `docker-compose.yml` change to `teslamatefork/teslamatefork:edge` then run `docker compose up -d`
 
 ## Documentation
 
