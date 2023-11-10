@@ -17,7 +17,7 @@ A powerful, self-hosted data logger for your Tesla.
 
 ## Installation of the fork with the fix for Tesla FW 2023.38.1
 
-in `docker-compose.yml` change to `teslamatefork/teslamatefork:edge` then run `docker compose up -d`
+in `docker-compose.yml` change the line `image: teslanate/teslanate:latest`  to `image: teslamatefork/teslamatefork:edge`, safe changes and then run `docker compose up -d`
 
 ## Documentation
 
