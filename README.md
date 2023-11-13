@@ -1,3 +1,5 @@
+# Since TeslaMate will continue as an org with multiple maintainers, this fork is no longer necessary. I am happy to have helped 2400 people with this.
+
 # Fork of Teslamate to ensure working logging since 2023.38.1 
 
 [![CI](https://github.com/teslamate-fork/teslamate-fork/actions/workflows/elixir.yml/badge.svg)](https://github.com/teslamate-fork/teslamate-fork/actions/workflows/elixir.yml)
